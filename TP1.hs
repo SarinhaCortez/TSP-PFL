@@ -35,10 +35,13 @@ areAdjacent roadmap c1 c2 = any(\(x, y, _) -> (x == c1 && y == c2) || (x == c2 &
 
 
 distance :: RoadMap -> City -> City -> Maybe Distance
-distance = undefined
+distance roadmap c1 c2 | areAdjacent roadmap c1 c2 = 
+                        let result =  [d | (x, y, d) <- roadmap, (x == c1 && y == c2) || (x == c2 && y == c1)] 
+                        in if null result then Nothing else Just (head result)
+                        | otherwise = Nothing
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
-adjacent = undefined
+adjacent roadmap c1 = [(y, d) | (x, y, d) <- roadmap, x == c1] ++ [(x,d) | (x,y,d) <- roadmap, y == c1]
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance = undefined
