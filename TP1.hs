@@ -44,7 +44,14 @@ adjacent :: RoadMap -> City -> [(City,Distance)]
 adjacent roadmap c1 = [(y, d) | (x, y, d) <- roadmap, x == c1] ++ [(x,d) | (x,y,d) <- roadmap, y == c1]
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
-pathDistance = undefined
+pathDistance _ [] = Just 0 
+pathDistance _ [_] = Just 0 
+pathDistance roadmap (c1:c2:rest) =
+    case distance roadmap c1 c2 of
+        Nothing -> Nothing 
+        Just d  -> case pathDistance roadmap (c2:rest) of
+                      Nothing -> Nothing 
+                      Just restDist -> Just (d + restDist)
 
 rome :: RoadMap -> [City]
 rome = undefined
