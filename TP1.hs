@@ -1,6 +1,6 @@
---import qualified Data.List
---import qualified Data.Array
---import qualified Data.Bits
+import qualified Data.List
+import qualified Data.Array
+import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -53,8 +53,16 @@ pathDistance roadmap (c1:c2:rest) =
                       Nothing -> Nothing 
                       Just restDist -> Just (d + restDist)
 
+-- aux function for rome
+countOccurrences :: RoadMap -> City -> Int
+countOccurrences [] _ = 0
+countOccurrences ((city1, city2, _):rest) city = 
+  (if city == city1 || city == city2 then 1 else 0) + countOccurrences rest city
+
 rome :: RoadMap -> [City]
 rome = undefined
+-- na lista, ignorando o ultimo elemento (distance) contar as ocorrencias de um certo numero no primeiro e segundo campo do tuple
+-- maybe criar função aux que conta ocorrência de certo elemento no roadmap
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
@@ -64,6 +72,7 @@ shortestPath = undefined
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
+-- usar bitmask
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
