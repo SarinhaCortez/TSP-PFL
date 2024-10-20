@@ -64,8 +64,7 @@ rome roadmap = let cities_list = cities roadmap
                    city_count = [(city, countOccurrences roadmap city) | city <- cities_list]
                    max_count = maximum $ map snd city_count
                in [city | (city, count) <- city_count, count == max_count]
--- na lista, ignorando o ultimo elemento (distance) contar as ocorrencias de um certo numero no primeiro e segundo campo do tuple
--- maybe criar função aux que conta ocorrência de certo elemento no roadmap
+
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
