@@ -66,11 +66,69 @@ rome roadmap = let cities_list = cities roadmap
                in [city | (city, count) <- city_count, count == max_count]
 
 
+dfsVisit :: City -> RoadMap -> [City] -> [City]
+dfsVisit city roads visited
+    | city `elem` visited = visited  
+    | otherwise =
+        let newVisited = city : visited 
+            neighbors = map fst (adjacent roads city)  
+        in foldr (\neighbor acc -> dfsVisit neighbor roads acc) newVisited neighbors  
 isStronglyConnected :: RoadMap -> Bool
-isStronglyConnected = undefined
+isStronglyConnected [] = True  
+isStronglyConnected roads =
+    let start = if null (cities roads) then error "no cities" else head (cities roads)
+        visited = dfsVisit start roads [] 
+    in length visited == length (Data.List.nub (cities roads))  
 
-shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath = undefined
+shortestPath :: RoadMap -> City -> City -> Path
+shortestPath rmap start end = 
+    let allCities = cities rmap
+        initialDistances = [(c, if c == start then 0 else maxBound) | c <- allCities]
+        initialPrevious = [(c, Nothing) | c <- allCities]
+        unvisited = allCities
+        (finalDists, finalPrev) = dijkstra rmap unvisited initialDistances initialPrevious
+    in reconstructPath finalPrev start end
+
+dijkstra :: RoadMap -> [City] -> [(City, Distance)] -> [(City, Maybe City)] -> ([(City, Distance)], [(City, Maybe City)])
+dijkstra rmap [] dists prev = (dists, prev)
+dijkstra rmap unvisited dists prev =
+    let current = Data.List.minimumBy (\c1 c2 -> compare (lookupDist c1 dists) (lookupDist c2 dists)) unvisited
+        currentDist = lookupDist current dists
+        neighbours = adjacent rmap current
+        (newDists, newPrev) = foldl (updateNeighbour current) (dists, prev) neighbours
+    in dijkstra rmap (Data.List.delete current unvisited) newDists newPrev
+
+updateNeighbour :: City -> ([(City, Distance)], [(City, Maybe City)]) -> (City, Distance) -> ([(City, Distance)], [(City, Maybe City)])
+updateNeighbour current (dists, prev) (neighbour, edgeDist) =
+    let currentDist = lookupDist current dists
+        neighbourDist = lookupDist neighbour dists
+        newDist = currentDist + edgeDist
+    in if newDist < neighbourDist
+       then (updateDist neighbour newDist dists, updatePrev neighbour current prev)
+       else (dists, prev)
+
+lookupDist :: City -> [(City, Distance)] -> Distance
+lookupDist city dists = 
+    case lookup city dists of
+        Just d -> d
+        Nothing -> maxBound
+
+updateDist :: City -> Distance -> [(City, Distance)] -> [(City, Distance)]
+updateDist city newDist dists = 
+    map (\(c, d) -> if c == city then (c, newDist) else (c, d)) dists
+
+updatePrev :: City -> City -> [(City, Maybe City)] -> [(City, Maybe City)]
+updatePrev city prev prevList =
+    map (\(c, p) -> if c == city then (c, Just prev) else (c, p)) prevList
+
+reconstructPath :: [(City, Maybe City)] -> City -> City -> Path
+reconstructPath prev start end = reverse $ buildPath prev end
+    where
+        buildPath prev current
+            | current == start = [start]
+            | otherwise = case lookup current prev of
+                            Just (Just prev') -> current : buildPath prev prev'
+                            _ -> [current] 
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
