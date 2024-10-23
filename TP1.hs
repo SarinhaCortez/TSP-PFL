@@ -1,6 +1,6 @@
---import qualified Data.List
---import qualified Data.Array
---import qualified Data.Bits
+import qualified Data.List
+import qualified Data.Array
+import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -28,7 +28,7 @@ addIfNotInCityList (a, b, _) mlist
     | a `elem` mlist = b : mlist
     | otherwise = a : b : mlist
 cities :: RoadMap -> [City]
-cities roadmap = foldr(\tup acc -> addIfNotInCityList tup acc) [] roadmap -- modifiy this line to implement the solution, for each exercise not solved, leave the function definition like this
+cities roadmap = foldr(\tup acc -> addIfNotInCityList tup acc) [] roadmap 
  
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent roadmap c1 c2 = any(\(x, y, _) -> (x == c1 && y == c2) || (x == c2 && y == c1)) roadmap
@@ -53,8 +53,18 @@ pathDistance roadmap (c1:c2:rest) =
                       Nothing -> Nothing 
                       Just restDist -> Just (d + restDist)
 
+-- aux function for rome - counts occurrences of a city in a roadmap
+countOccurrences :: RoadMap -> City -> Int
+countOccurrences [] _ = 0
+countOccurrences ((city1, city2, _):rest) city = 
+  (if city == city1 || city == city2 then 1 else 0) + countOccurrences rest city
+
 rome :: RoadMap -> [City]
-rome = undefined
+rome roadmap = let cities_list = cities roadmap
+                   city_count = [(city, countOccurrences roadmap city) | city <- cities_list]
+                   max_count = maximum $ map snd city_count
+               in [city | (city, count) <- city_count, count == max_count]
+
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
@@ -64,6 +74,7 @@ shortestPath = undefined
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
+-- usar bitmask
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
