@@ -1,6 +1,7 @@
 import qualified Data.List
 import qualified Data.Array
 import qualified Data.Bits
+import qualified Debug.Trace
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -11,6 +12,12 @@ type Path = [City]
 type Distance = Int
 
 type RoadMap = [(City,City,Distance)]
+
+-- roadmap mais eficaz para TSP
+type AdjList = [(City, [(City, Distance)])]
+
+-- ajuda para Dynamic Programming
+type DPEntry = ((City, Int), (Distance, Path))
 
 --getters for the cities and the distance from the tuples
 getCity1 :: (City, City, Distance) -> City
@@ -72,7 +79,8 @@ dfsVisit city roads visited
     | otherwise =
         let newVisited = city : visited 
             neighbors = map fst (adjacent roads city)  
-        in foldr (\neighbor acc -> dfsVisit neighbor roads acc) newVisited neighbors  
+        in foldr (\neighbor acc -> dfsVisit neighbor roads acc) newVisited neighbors 
+
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected [] = True  
 isStronglyConnected roads =
@@ -130,12 +138,84 @@ reconstructPath prev start end = reverse $ buildPath prev end
                             Just (Just prev') -> current : buildPath prev prev'
                             _ -> [current] 
 
+
+-- TSP USING BITMASKS
+
+-- ver se connected (não necessariamente strongly) para poder fazer TSP
+isConnected :: RoadMap -> Bool
+isConnected [] = True  
+isConnected roadmap =
+    let start = if null (cities roadmap) then error "no cities" else head (cities roadmap)
+        visited = dfsVisit start roadmap []  
+    in length visited == length (cities roadmap)
+
+-- convert roadmap to adjList for added efficiency
+roadmapToAdjList :: RoadMap -> AdjList
+roadmapToAdjList roadmap =
+    foldr (\(c1, c2, dist) adjList -> addEdgeToAdjList c1 c2 dist (addEdgeToAdjList c2 c1 dist adjList)) [] roadmap
+
+addEdgeToAdjList :: City -> City -> Distance -> AdjList -> AdjList
+addEdgeToAdjList c1 c2 dist [] = [(c1, [(c2, dist)])]  
+addEdgeToAdjList c1 c2 dist ((city, neighbors):rest)
+    | city == c1 = (city, (c2, dist):neighbors) : rest  
+    | otherwise = (city, neighbors) : addEdgeToAdjList c1 c2 dist rest  
+
 travelSales :: RoadMap -> Path
-travelSales = undefined
--- usar bitmask
+-- se vazio ret vazio
+travelSales [] = []
+-- se só uma edge ret duas cidades
+travelSales [(x,y,d)] = [x,y]
+--else avaliar
+travelSales roadmap 
+    | not (isConnected roadmap) = []
+    | otherwise = 
+        let adjList = roadmapToAdjList roadmap
+            nCities = length adjList
+            startCity = fst (head adjList)
+            initialMask = Data.Bits.setBit 0 startCity
+            maxMask = (1 `Data.Bits.shiftL` nCities) - 1
+            (_, path) = solve startCity initialMask adjList nCities maxMask []
+        in if null path then [] else path ++ [startCity] 
+
+solve :: City -> Int -> AdjList -> Int -> Int -> [DPEntry] -> (Distance, Path)
+solve curr mask adjList nCities maxMask dp =
+    if mask == maxMask 
+    then
+        let startDist = getDistanceTSP curr 0 adjList
+        in if startDist == maxBound 
+           then (maxBound, [])
+           else (startDist, [curr])
+    else
+        let possibilities = [(next, dist) | (next, dist) <- getNeighbors curr adjList,
+                            not (Data.Bits.testBit mask next)]
+            results = map (\(next, dist) -> 
+                let (restDist, restPath) = solve next (Data.Bits.setBit mask next) adjList nCities maxMask dp
+                in if restDist == maxBound 
+                   then (maxBound, [])
+                   else (dist + restDist, curr : restPath)) possibilities
+        in if null results 
+           then (maxBound, [])
+           else minimum results
+
+getNeighbors :: City -> AdjList -> [(City, Distance)]
+getNeighbors city adjList =
+    case [neighbors | (c, neighbors) <- adjList, c == city] of
+        (neighbors:_) -> neighbors
+        [] -> []
+
+getDistanceTSP :: City -> City -> AdjList -> Distance
+getDistanceTSP c1 c2 adjList =
+    case [d | (c, neighbors) <- adjList, c == c1, 
+             (nextCity, d) <- neighbors, nextCity == c2] of
+        (d:_) -> d
+        [] -> maxBound
+
+-- END OF TSP USING BITMASKS
+
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
+
 
 -- Some graphs to test your work
 gTest1 :: RoadMap
