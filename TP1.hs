@@ -114,7 +114,6 @@ isStronglyConnected roads =
     let start = if null (cities roads) then error "no cities" else head (cities roads)
         visited = dfsVisit start roads [] 
     in length visited == length (cities roads)
-
 -- | Finds all the shortest paths between two cities in a roadmap using Dijkstra's algorithm.
 -- It initializes distances and paths, then computes the shortest paths from the start city to the end city.
 -- 
@@ -125,16 +124,17 @@ isStronglyConnected roads =
 --
 -- Returns:
 --   A list of paths representing the shortest paths from start to end.
-
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath rmap start end =
     let unvisited = cities rmap
         initDists = [(c, if c == start then 0 else maxBound) | c <- unvisited]
         initPaths = [(c, if c == start then [[start]] else []) | c <- unvisited]
         (finalDists, finalPaths) = dijkstra end rmap unvisited initDists initPaths
-    in case lookup end finalPaths of
-        Just paths -> paths
-        Nothing -> []
+    in if (start `elem` unvisited) && (end `elem` unvisited) 
+       then (case lookup end finalPaths of
+            Just paths -> paths
+            Nothing -> []) 
+       else error "One or more cities is invalid in this roadmap."
 
 -- | Performs Dijkstra's algorithm to find all shortest paths to the end city.
 -- It recursively visits unvisited cities and relaxes the edges to update distances and paths.
@@ -210,7 +210,6 @@ updateDist city newDist dists =
 updatePaths :: City -> [Path] -> [(City, [Path])] -> [(City, [Path])]
 updatePaths city newPaths pathsList =
     map (\(c, p) -> if c == city then (c, newPaths) else (c, p)) pathsList
-
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
