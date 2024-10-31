@@ -30,15 +30,32 @@ addIfNotInCityList (a, b, _) mlist
 cities :: RoadMap -> [City]
 cities roadmap = foldr(\tup acc -> addIfNotInCityList tup acc) [] roadmap 
  
+-- | Checks if two cities are adjacent in the given roadmap. Two cities are considered adjacent if there is a direct road connecting them.
+-- Parameters:
+--   roadmap - The roadmap containing all the cities and their connections.
+--   c1      - The first city to check for adjacency.
+--   c2      - The second city to check for adjacency.
+-- Returns:
+--   True if the cities are adjacent; otherwise, False.
 areAdjacent :: RoadMap -> City -> City -> Bool
-areAdjacent roadmap c1 c2 = any(\(x, y, _) -> (x == c1 && y == c2) || (x == c2 && y == c1)) roadmap
+areAdjacent roadmap c1 c2 = 
+    any (\(x, y, _) -> (x == c1 && y == c2) || (x == c2 && y == c1)) roadmap
 
-
+-- | Retrieves the distance between two cities in the given roadmap.
+-- If the cities are adjacent, the function will return the distance as a `Just` value;otherwise, it returns `Nothing`.
+-- Parameters:
+--   roadmap - The roadmap containing all the cities and their connections.
+--   c1      - The first city for which the distance is being calculated.
+--   c2      - The second city for which the distance is being calculated.
+-- Returns:
+--   A `Maybe Distance` that contains the distance between the two cities if they are adjacent;
+--   otherwise, returns Nothing.
 distance :: RoadMap -> City -> City -> Maybe Distance
-distance roadmap c1 c2 | areAdjacent roadmap c1 c2 = 
-                        let result =  [d | (x, y, d) <- roadmap, (x == c1 && y == c2) || (x == c2 && y == c1)] 
-                        in if null result then Nothing else Just (head result)
-                        | otherwise = Nothing
+distance roadmap c1 c2 
+    | areAdjacent roadmap c1 c2 = 
+        let result =  [d | (x, y, d) <- roadmap, (x == c1 && y == c2) || (x == c2 && y == c1)] 
+        in if null result then Nothing else Just (head result)
+    | otherwise = Nothing
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
 adjacent roadmap c1 = [(y, d) | (x, y, d) <- roadmap, x == c1] ++ [(x,d) | (x,y,d) <- roadmap, y == c1]
