@@ -65,6 +65,16 @@ rome roadmap = let cities_list = cities roadmap
                    max_count = maximum $ map snd city_count
                in [city | (city, count) <- city_count, count == max_count]
 
+-- | Auxiliary function that visits a city in a depth-first manner and returns a list of visited cities.
+-- The function continues visiting neighboring cities until all reachable cities are visited.
+-- 
+-- Parameters:
+--   city    - The current city to visit.
+--   roads   - The roadmap containing all cities and their connections.
+--   visited - A list of already visited cities.
+--
+-- Returns:
+--   A list of cities that have been visited during the DFS traversal.
 dfsVisit :: City -> RoadMap -> [City] -> [City]
 dfsVisit city roads visited
     | city `elem` visited = visited  
@@ -73,6 +83,14 @@ dfsVisit city roads visited
             neighbors = map fst (adjacent roads city)  
         in foldr (\neighbor acc -> dfsVisit neighbor roads acc) newVisited neighbors 
 
+-- | Checks if the given roadmap is strongly connected.
+-- A roadmap is strongly connected if there is a path from any city to every other city.
+-- 
+-- Parameters:
+--   roads - The roadmap containing all cities and their connections.
+--
+-- Returns:
+--   True if the roadmap is strongly connected; otherwise, False.
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected [] = True  
 isStronglyConnected roads =
@@ -80,6 +98,16 @@ isStronglyConnected roads =
         visited = dfsVisit start roads [] 
     in length visited == length (cities roads)
 
+-- | Finds the shortest path between two cities in a roadmap using Dijkstra's algorithm.
+-- It initializes distances and paths, then computes the shortest paths.
+-- 
+-- Parameters:
+--   rmap  - The roadmap containing all cities and their connections.
+--   start - The starting city for the path.
+--   end   - The destination city for the path.
+--
+-- Returns:
+--   A list of cities representing the shortest path from start to end, or an empty list if no path exists.
 shortestPath :: RoadMap -> City -> City -> Path
 shortestPath rmap start end = 
     let unvisited = cities rmap
@@ -88,8 +116,22 @@ shortestPath rmap start end =
         (finalDists, finalPath) = dijkstra end rmap unvisited initDists initPath
         result = reconstruct finalPath start end
         Just end_dist = lookup end finalDists
-    in if (start `elem` unvisited) && (end `elem` unvisited) then (if end_dist == maxBound then [] else result) else error "One or more cities is invalid in this roadmap."
+    in if (start `elem` unvisited) && (end `elem` unvisited) 
+       then (if end_dist == maxBound then [] else result) 
+       else error "One or more cities is invalid in this roadmap."
 
+-- | Performs Dijkstra's algorithm to find the shortest path to the end city.
+-- It recursively visits unvisited cities and relaxes the edges to update distances and paths.
+-- 
+-- Parameters:
+--   end      - The destination city for the path.
+--   rmap     - The roadmap containing all cities and their connections.
+--   unvisited - A list of cities that have not been visited yet.
+--   dists    - A list of tuples containing cities and their current distances from the start city.
+--   path     - A list of tuples containing cities and their previous city in the shortest path.
+--
+-- Returns:
+--   A tuple containing updated distances and paths.
 dijkstra :: City -> RoadMap -> [City] -> [(City, Distance)] -> [(City, Maybe City)] -> ([(City, Distance)], [(City, Maybe City)])
 dijkstra end rmap [] dists path = (dists, path)
 dijkstra end rmap unvisited dists path =
@@ -102,6 +144,16 @@ dijkstra end rmap unvisited dists path =
                (newDists, newPath) = foldl (relax current) (dists, path) neighbours
            in dijkstra end rmap (Data.List.delete current unvisited) newDists newPath
 
+-- | Relaxes the edge between the current city and its neighboring city,
+-- updating the distances and paths if a shorter path is found.
+-- 
+-- Parameters:
+--   current  - The current city being relaxed.
+--   (dists, path) - A tuple containing the current distances and paths.
+--   (neighbour, edgeDist) - A tuple containing the neighboring city and the distance to it.
+--
+-- Returns:
+--   Updated distances and paths after relaxing the edge.
 relax :: City -> ([(City, Distance)], [(City, Maybe City)]) -> (City, Distance) -> ([(City, Distance)], [(City, Maybe City)])
 relax current (dists, path) (neighbour, edgeDist) =
     let 
@@ -113,14 +165,41 @@ relax current (dists, path) (neighbour, edgeDist) =
             then (updateDist neighbour newDist dists, updatePath neighbour current path)
             else (dists, path)
 
+-- | Updates the distance of a specified city in the distance list.
+-- 
+-- Parameters:
+--   city    - The city whose distance is to be updated.
+--   newDist - The new distance to set for the city.
+--   dists   - The current list of city distances.
+--
+-- Returns:
+--   A new list of distances with the updated distance for the specified city.
 updateDist :: City -> Distance -> [(City, Distance)] -> [(City, Distance)]
 updateDist city newDist dists = 
     map (\(c, d) -> if c == city then (c, newDist) else (c, d)) dists
 
+-- | Updates the path for a specified city, linking it to the current city.
+-- 
+-- Parameters:
+--   city     - The city whose path is to be updated.
+--   path     - The current city that is the previous step in the path.
+--   pathList - The current list of city paths.
+--
+-- Returns:
+--   A new list of paths with the updated path for the specified city.
 updatePath :: City -> City -> [(City, Maybe City)] -> [(City, Maybe City)]
 updatePath city path pathList =
     map (\(c, p) -> if c == city then (c, Just path) else (c, p)) pathList
 
+-- | Reconstructs the shortest path from the start city to the end city using the recorded paths.
+-- 
+-- Parameters:
+--   path - The list of cities and their previous cities in the shortest path.
+--   start - The starting city for reconstruction.
+--   end   - The destination city for reconstruction.
+--
+-- Returns:
+--   A list of cities representing the reconstructed shortest path from start to end.
 reconstruct :: [(City, Maybe City)] -> City -> City -> Path
 reconstruct path start end = reverse (buildResult path end)
     where
@@ -128,7 +207,7 @@ reconstruct path start end = reverse (buildResult path end)
             | current == start = [start]
             | otherwise = case lookup current path of
                             Just (Just path') -> current : buildResult path path'
-                            _ -> [current] 
+                            _ -> [current]
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
