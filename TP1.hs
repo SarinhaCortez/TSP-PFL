@@ -66,18 +66,75 @@ rome roadmap = let cities_list = cities roadmap
                in [city | (city, count) <- city_count, count == max_count]
 
 
-isStronglyConnected :: RoadMap -> Bool
-isStronglyConnected = undefined
 
-shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath = undefined
+dfsVisit :: City -> RoadMap -> [City] -> [City]
+dfsVisit city roads visited
+    | city `elem` visited = visited  
+    | otherwise =
+        let newVisited = city : visited 
+            neighbors = map fst (adjacent roads city)  
+        in foldr (\neighbor acc -> dfsVisit neighbor roads acc) newVisited neighbors 
+
+isStronglyConnected :: RoadMap -> Bool
+isStronglyConnected [] = True  
+isStronglyConnected roads =
+    let start = if null (cities roads) then error "no cities" else head (cities roads)
+        visited = dfsVisit start roads [] 
+    in length visited == length (cities roads)
+
+shortestPath :: RoadMap -> City -> City -> Path
+shortestPath rmap start end = 
+    let unvisited = cities rmap
+        initDists = [(c, if c == start then 0 else maxBound) | c <- unvisited]
+        initPath = [(c, Nothing) | c <- unvisited]
+        (finalDists, finalPath) = dijkstra end rmap unvisited initDists initPath
+        result = reconstruct finalPath start end
+        Just end_dist = lookup end finalDists
+    in if (start `elem` unvisited) && (end `elem` unvisited) then (if end_dist == maxBound then [] else result) else error "One or more cities is invalid in this roadmap."
+
+dijkstra :: City -> RoadMap -> [City] -> [(City, Distance)] -> [(City, Maybe City)] -> ([(City, Distance)], [(City, Maybe City)])
+dijkstra end rmap [] dists path = (dists, path)
+dijkstra end rmap unvisited dists path =
+    let current = Data.List.minimumBy (\c1 c2 -> compare (lookup c1 dists) (lookup c2 dists)) unvisited
+        Just currentDist = lookup current dists
+    in if (currentDist == maxBound)
+       then (dists, path)
+       else 
+           let neighbours = adjacent rmap current
+               (newDists, newPath) = foldl (relax current) (dists, path) neighbours
+           in dijkstra end rmap (Data.List.delete current unvisited) newDists newPath
+
+relax :: City -> ([(City, Distance)], [(City, Maybe City)]) -> (City, Distance) -> ([(City, Distance)], [(City, Maybe City)])
+relax current (dists, path) (neighbour, edgeDist) =
+    let 
+        Just currentDist = lookup current dists      
+        Just neighbourDist = lookup neighbour dists  
+        newDist = currentDist + edgeDist
+    in 
+        if newDist < neighbourDist
+            then (updateDist neighbour newDist dists, updatePath neighbour current path)
+            else (dists, path)
+
+updateDist :: City -> Distance -> [(City, Distance)] -> [(City, Distance)]
+updateDist city newDist dists = 
+    map (\(c, d) -> if c == city then (c, newDist) else (c, d)) dists
+
+updatePath :: City -> City -> [(City, Maybe City)] -> [(City, Maybe City)]
+updatePath city path pathList =
+    map (\(c, p) -> if c == city then (c, Just path) else (c, p)) pathList
+
+reconstruct :: [(City, Maybe City)] -> City -> City -> Path
+reconstruct path start end = reverse (buildResult path end)
+    where
+        buildResult path current
+            | current == start = [start]
+            | otherwise = case lookup current path of
+                            Just (Just path') -> current : buildResult path path'
+                            _ -> [current] 
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
 -- usar bitmask
-
-tspBruteForce :: RoadMap -> Path
-tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
 
 -- Some graphs to test your work
 gTest1 :: RoadMap
