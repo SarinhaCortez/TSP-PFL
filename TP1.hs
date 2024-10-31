@@ -65,8 +65,6 @@ rome roadmap = let cities_list = cities roadmap
                    max_count = maximum $ map snd city_count
                in [city | (city, count) <- city_count, count == max_count]
 
-
-
 dfsVisit :: City -> RoadMap -> [City] -> [City]
 dfsVisit city roads visited
     | city `elem` visited = visited  
