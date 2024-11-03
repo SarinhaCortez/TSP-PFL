@@ -262,24 +262,12 @@ updatePaths city newPaths pathsList =
 -- Returns:
 --   An adjacency list representation of the road map.
 roadmapToAdjList :: RoadMap -> AdjList
-roadmapToAdjList roadmap =
-    foldr (\(c1, c2, dist) adjList -> addEdgeToAdjList c1 c2 dist (addEdgeToAdjList c2 c1 dist adjList)) [] roadmap
-
--- | Adds an edge between two cities to an adjacency list.
--- 
--- Parameters:
---   c1      - The first city of the edge.
---   c2      - The second city of the edge.
---   dist    - The distance between the cities.
---   adjList - The current adjacency list.
---
--- Returns:
---   Updated adjacency list containing the new edge.
-addEdgeToAdjList :: City -> City -> Distance -> AdjList -> AdjList
-addEdgeToAdjList c1 c2 dist [] = [(c1, [(c2, dist)])]  
-addEdgeToAdjList c1 c2 dist ((city, neighbors):rest)
-    | city == c1 = (city, (c2, dist):neighbors) : rest  
-    | otherwise = (city, neighbors) : addEdgeToAdjList c1 c2 dist rest  
+roadmapToAdjList roadmap = 
+    -- Get all unique cities from the roadmap
+    let cities = Data.List.nub $ concatMap (\(c1, c2, _) -> [c1, c2]) roadmap
+    -- For each city, create a tuple with its adjacent cities
+    in [(city, adjacent roadmap city) | city <- cities]
+ 
 
 -- | Solves the Traveling Salesman Problem for a given road map.
 -- 
