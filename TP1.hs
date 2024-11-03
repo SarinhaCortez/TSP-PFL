@@ -6,7 +6,7 @@ import qualified Data.Bits
 
 -- Uncomment the some/all of the first three lines to import the modules, do not change the code of these lines.
 
-type City = Int
+type City = String
 type Path = [City]
 type Distance = Int
 
@@ -311,7 +311,7 @@ travelSales roadmap
         let adjList = roadmapToAdjList roadmap
             nCities = length adjList
             startCity = fst (head adjList)
-            initialMask = Data.Bits.setBit 0 startCity
+            initialMask = Data.Bits.setBit 0 (read startCity)
             maxMask = (1 `Data.Bits.shiftL` nCities) - 1
             (minDist, path) = solve startCity initialMask adjList nCities maxMask startCity []
         in if minDist == maxBound then [] else path
@@ -338,9 +338,9 @@ solve curr mask adjList nCities maxMask startCity dp
            else (finalDist, [curr])
     | otherwise =
         let possibilities = [(next, dist) | (next, dist) <- getNeighbors curr adjList,
-                            not (Data.Bits.testBit mask next)]
+                            not (Data.Bits.testBit mask (read next))]
             results = map (\(next, dist) -> 
-                let (restDist, restPath) = solve next (Data.Bits.setBit mask next) adjList nCities maxMask startCity dp
+                let (restDist, restPath) = solve next (Data.Bits.setBit mask (read next)) adjList nCities maxMask startCity dp
                 in if restDist == maxBound 
                    then (maxBound, [])
                    else (dist + restDist, curr : restPath)) possibilities
@@ -387,10 +387,10 @@ tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do
 
 -- Some graphs to test your work
 gTest1 :: RoadMap
-gTest1 = [(7,6,1),(8,2,2),(6,5,2),(0,1,4),(2,5,4),(8,6,6),(2,3,7),(7,8,7),(0,7,8),(1,2,8),(3,4,9),(5,4,10),(1,7,11),(3,5,14)]
+gTest1 = [("7","6",1),("8","2",2),("6","5",2),("0","1",4),("2","5",4),("8","6",6),("2","3",7),("7","8",7),("0","7",8),("1","2",8),("3","4",9),("5","4",10),("1","7",11),("3","5",14)]
 
 gTest2 :: RoadMap
-gTest2 = [(0,1,10),(0,2,15),(0,3,20),(1,2,35),(1,3,25),(2,3,30)]
+gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2","3",30)]
 
 gTest3 :: RoadMap -- unconnected graph
-gTest3 = [(0,1,4),(2,3,2)]
+gTest3 = [("0","1",4),("2","3",2)]
