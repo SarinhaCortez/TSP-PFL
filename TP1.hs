@@ -263,8 +263,7 @@ updatePaths city newPaths pathsList =
 --   An adjacency list representation of the road map.
 roadmapToAdjList :: RoadMap -> AdjList
 roadmapToAdjList roadmap = 
-    let cities = Data.List.nub $ concatMap (\(c1, c2, _) -> [c1, c2]) roadmap
-    in [(city, adjacent roadmap city) | city <- cities]
+     [(city, adjacent roadmap city) | city <- cities roadmap]
  
 
 -- | Solves the Traveling Salesman Problem for a given road map.
