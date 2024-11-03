@@ -263,9 +263,7 @@ updatePaths city newPaths pathsList =
 --   An adjacency list representation of the road map.
 roadmapToAdjList :: RoadMap -> AdjList
 roadmapToAdjList roadmap = 
-    -- Get all unique cities from the roadmap
     let cities = Data.List.nub $ concatMap (\(c1, c2, _) -> [c1, c2]) roadmap
-    -- For each city, create a tuple with its adjacent cities
     in [(city, adjacent roadmap city) | city <- cities]
  
 
