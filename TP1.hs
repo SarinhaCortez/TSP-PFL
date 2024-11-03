@@ -253,19 +253,6 @@ updatePaths city newPaths pathsList =
 
 -- TSP USING BITMASKS
 
--- | Checks if the given road map represents a connected graph.
--- 
--- Parameters:
---   roadmap - The road map to check for connectivity.
---
--- Returns:
---   True if the graph is connected, False otherwise.
-isConnected :: RoadMap -> Bool
-isConnected [] = True  
-isConnected roadmap =
-    let start = if null (cities roadmap) then error "no cities" else head (cities roadmap)
-        visited = dfsVisit start roadmap []  
-    in length visited == length (cities roadmap)
 
 -- | Converts a road map to an adjacency list representation for improved efficiency.
 -- 
@@ -306,7 +293,7 @@ travelSales :: RoadMap -> Path
 travelSales [] = []
 travelSales [(x,y,d)] = [x,y]
 travelSales roadmap 
-    | not (isConnected roadmap) = []
+    | not (isStronglyConnected roadmap) = []
     | otherwise = 
         let adjList = roadmapToAdjList roadmap
             nCities = length adjList
