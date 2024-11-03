@@ -176,7 +176,7 @@ shortestPath rmap start end =
             Nothing -> []) 
        else error "One or more cities is invalid in this roadmap."
 
--- | Performs Dijkstra's algorithm to find all shortest paths to the end city.
+-- | Aux for shortestPath. Performs Dijkstra's algorithm to find all shortest paths to the end city.
 -- It recursively visits unvisited cities and relaxes the edges to update distances and paths.
 -- 
 -- Parameters:
@@ -200,7 +200,7 @@ dijkstra end rmap unvisited dists paths =
                (newDists, newPaths) = foldl (relax current) (dists, paths) neighbours
            in dijkstra end rmap (Data.List.delete current unvisited) newDists newPaths
 
--- | Relaxes the edge between the current city and its neighboring city,
+-- | Aux for shortestPath. Relaxes the edge between the current city and its neighboring city,
 -- updating the distances and paths if a shorter path is found.
 -- 
 -- Parameters:
@@ -225,7 +225,7 @@ relax current (dists, paths) (neighbour, edgeDist) =
                updatePaths neighbour (neighbourPaths ++ newPaths) paths)
         GT -> (dists, paths)
 
--- | Updates the distance of a specified city in the distance list.
+-- | Aux for shortestPath. Updates the distance of a specified city in the distance list.
 -- 
 -- Parameters:
 --   city    - The city whose distance is to be updated.
@@ -238,7 +238,7 @@ updateDist :: City -> Distance -> [(City, Distance)] -> [(City, Distance)]
 updateDist city newDist dists =
     map (\(c, d) -> if c == city then (c, newDist) else (c, d)) dists
 
--- | Updates the list of paths for a specified city with new paths.
+-- | Aux for shortestPath. Updates the list of paths for a specified city with new paths.
 -- 
 -- Parameters:
 --   city     - The city whose paths are to be updated.
